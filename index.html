@@ -15,7 +15,7 @@
                 margin-top: 10px;
                 display: flex;
             }
-            .chat-massage {
+            .chat-message {
                 background: #eee;
                 padding: 5px;
                 max-width: 200px;
@@ -29,13 +29,13 @@
     <body>
         <div class="content">
             <div class="chat">
-                <span class="chat-massage">chat1</span>
+                <span class="chat-message">chat1</span>
             </div>
             <div class="chat">
-                <span class="chat-massage me">chat2</span>
+                <span class="chat-message me">chat2</span>
             </div>
         </div>
-        <input type="text" id="massage" />
+        <input type="text" id="message" />
         <button id="send">전송</button>
 
         <script type="module">
@@ -44,17 +44,25 @@
                 OpenAIApi,
             } from "https://cdn.skypack.dev/openai";
 
+            document
+                .querySelector("#send")
+                .addEventListener("click", function () {
+                    sendChat();
+                });
+
             let sendChat = () => {
                 let template1 = `<div class="chat">
-                                                <span class="chat-massage me">${
+                                                <span class="chat-message me">${
                                                     document.querySelector(
-                                                        "#massage"
+                                                        "#message"
                                                     ).value
                                                 }</span>
                                             </div>`;
                 document
                     .querySelector(".content")
                     .insertAdjacentHTML("beforeend", template1);
+
+                translate(document.querySelector("#message").value);
 
                 const configuration = new Configuration({
                     apiKey: "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",
@@ -64,7 +72,7 @@
                 openai
                     .createCompletion({
                         model: "text-davinci-003",
-                        prompt: document.querySelector("#massage").value,
+                        prompt: document.querySelector("#message").value,
                         temperature: 0.7,
                         max_tokens: 256,
                         top_p: 1,
@@ -73,7 +81,7 @@
                     })
                     .then((result) => {
                         let template2 = `<div class="chat">
-                                                <span class="chat-massage">${result.data.choices[0].text}</span>
+                                                <span class="chat-message">${result.data.choices[0].text}</span>
                                             </div>`;
                         document
                             .querySelector(".content")
@@ -81,11 +89,33 @@
                     });
             };
 
-            document
-                .querySelector("#send")
-                .addEventListener("click", function () {
-                    sendChat();
-                });
+            let translate = (message) => {
+                //XMLHttpRequest 객체 생성
+                var xhr = new XMLHttpRequest();
+                let msg = message;
+                let result;
+
+                let url = `http://43.200.181.24:8081/translate?msg=${msg}`;
+
+                //요청을 보낼 방식, url, 비동기여부 설정
+                xhr.open("GET", url, true);
+
+                //요청 전송
+                xhr.send();
+
+                //Callback
+                xhr.onload = () => {
+                    if (xhr.status == 200) {
+                        //success
+                        console.log(xhr.response);
+                        result = xhr.response;
+                    } else {
+                        //failed
+                    }
+                };
+
+                return result;
+            };
         </script>
     </body>
 </html>
