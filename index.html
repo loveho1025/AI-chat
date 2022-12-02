@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>짭심이</title>
+
+        <style>
+            .content {
+                height: 350px;
+                overflow-y: scroll;
+            }
+            .chat {
+                margin-top: 10px;
+                display: flex;
+            }
+            .chat-massage {
+                background: #eee;
+                padding: 5px;
+                max-width: 200px;
+            }
+            .me {
+                margin-left: auto;
+                margin-right: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="content">
+            <div class="chat">
+                <span class="chat-massage">chat1</span>
+            </div>
+            <div class="chat">
+                <span class="chat-massage me">chat2</span>
+            </div>
+        </div>
+        <input type="text" id="massage" />
+        <button id="send">전송</button>
+
+        <script type="module">
+            import {
+                Configuration,
+                OpenAIApi,
+            } from "https://cdn.skypack.dev/openai";
+
+            let sendChat = () => {
+                let template1 = `<div class="chat">
+                                                <span class="chat-massage me">${
+                                                    document.querySelector(
+                                                        "#massage"
+                                                    ).value
+                                                }</span>
+                                            </div>`;
+                document
+                    .querySelector(".content")
+                    .insertAdjacentHTML("beforeend", template1);
+
+                const configuration = new Configuration({
+                    apiKey: "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",
+                });
+                const openai = new OpenAIApi(configuration);
+
+                openai
+                    .createCompletion({
+                        model: "text-davinci-003",
+                        prompt: document.querySelector("#massage").value,
+                        temperature: 0.7,
+                        max_tokens: 256,
+                        top_p: 1,
+                        frequency_penalty: 0,
+                        presence_penalty: 0,
+                    })
+                    .then((result) => {
+                        let template2 = `<div class="chat">
+                                                <span class="chat-massage">${result.data.choices[0].text}</span>
+                                            </div>`;
+                        document
+                            .querySelector(".content")
+                            .insertAdjacentHTML("beforeend", template2);
+                    });
+            };
+
+            document
+                .querySelector("#send")
+                .addEventListener("click", function () {
+                    sendChat();
+                });
+        </script>
+    </body>
+</html>
