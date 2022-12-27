@@ -1,17 +1,26 @@
 var express = require("express");
 var app = express();
 const router = express.Router();
+const cors = require("cors");
+app.use(cors());
 
+//홍슬기
+/* var client_id = "wRc1dRVvzvYvlkdK4qfT";
+var client_secret = "9KzEgjuL7H"; */
+
+//최종호
 var client_id = "wRc1dRVvzvYvlkdK4qfT";
 var client_secret = "9KzEgjuL7H";
 var query;
 app.get("/translate", function (req, res) {
     query = req.query.msg;
+    let source = req.query.source;
+    let target = req.query.target;
     var api_url = "https://openapi.naver.com/v1/papago/n2mt";
     var request = require("request");
     var options = {
         url: api_url,
-        form: { source: "ko", target: "en", text: query },
+        form: { source: source, target: target, text: query },
         headers: {
             "X-Naver-Client-Id": client_id,
             "X-Naver-Client-Secret": client_secret,

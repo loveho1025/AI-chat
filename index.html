@@ -3,40 +3,92 @@
     <head>
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>짭심이</title>
+        <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
+        />
+        <title>최종호</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+        />
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+        ></script>
 
         <style>
             .content {
                 height: 350px;
-                overflow-y: scroll;
+                overflow-y: auto;
             }
             .chat {
                 margin-top: 10px;
                 display: flex;
             }
             .chat-message {
-                background: #eee;
+                background: #ffffff;
                 padding: 5px;
                 max-width: 200px;
+                margin-left: 10px;
             }
             .me {
                 margin-left: auto;
                 margin-right: 10px;
+                background: #ffe81a;
+            }
+            #msgInput {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                padding: 10px;
+                background: #fff;
+            }
+            #message {
+                width: 70%;
+                height: 50px;
+                border: 0px;
+            }
+            #send {
+                width: 20%;
+                height: 50px;
+                border: 0px;
+                background: #ffe81a;
+                float: right;
+            }
+            body {
+                background: #b2c7d9;
+                margin-bottom: 0px;
+                margin-right: 0px;
+                margin-top: 0px;
+                margin-left: 0px;
+            }
+            input:focus {
+                outline: none;
             }
         </style>
     </head>
     <body>
-        <div class="content">
-            <div class="chat">
-                <span class="chat-message">chat1</span>
+        <div id="body-wrapper">
+            <div class="content">
+                <div class="chat">
+                    <span class="chat-message">안녕하세요</span>
+                </div>
+                <div class="chat">
+                    <span class="chat-message">무엇이든 물어보세요</span>
+                </div>
+                <div class="chat">
+                    <span class="chat-message">질문에 뭐든 대답합니다</span>
+                </div>
             </div>
-            <div class="chat">
-                <span class="chat-message me">chat2</span>
+            <div id="msgInput">
+                <input type="text" id="message" />
+                <button id="send">전송</button>
             </div>
         </div>
-        <input type="text" id="message" />
-        <button id="send">전송</button>
 
         <script type="module">
             import {
@@ -44,10 +96,22 @@
                 OpenAIApi,
             } from "https://cdn.skypack.dev/openai";
 
+            let allChatEn =
+                "ho is a chatbot that reluctantly answers questions with sarcastic responses\n\n";
+            let serverIP = "http://13.209.35.175:8081";
+
             document
                 .querySelector("#send")
                 .addEventListener("click", function () {
                     sendChat();
+                });
+
+            document
+                .querySelector("#message")
+                .addEventListener("keypress", function (key) {
+                    if (key.key == "Enter") {
+                        sendChat();
+                    }
                 });
 
             let sendChat = () => {
@@ -62,40 +126,14 @@
                     .querySelector(".content")
                     .insertAdjacentHTML("beforeend", template1);
 
-                translate(document.querySelector("#message").value);
-
-                const configuration = new Configuration({
-                    apiKey: "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",
-                });
-                const openai = new OpenAIApi(configuration);
-
-                openai
-                    .createCompletion({
-                        model: "text-davinci-003",
-                        prompt: document.querySelector("#message").value,
-                        temperature: 0.7,
-                        max_tokens: 256,
-                        top_p: 1,
-                        frequency_penalty: 0,
-                        presence_penalty: 0,
-                    })
-                    .then((result) => {
-                        let template2 = `<div class="chat">
-                                                <span class="chat-message">${result.data.choices[0].text}</span>
-                                            </div>`;
-                        document
-                            .querySelector(".content")
-                            .insertAdjacentHTML("beforeend", template2);
-                    });
-            };
-
-            let translate = (message) => {
                 //XMLHttpRequest 객체 생성
                 var xhr = new XMLHttpRequest();
-                let msg = message;
-                let result;
+                let msg = document.querySelector("#message").value;
 
-                let url = `http://43.200.181.24:8081/translate?msg=${msg}`;
+                let url = `${serverIP}/translate?msg=${msg}&source=ko&target=en`;
+
+                //input 삭제
+                document.querySelector("#message").value = "";
 
                 //요청을 보낼 방식, url, 비동기여부 설정
                 xhr.open("GET", url, true);
@@ -103,18 +141,124 @@
                 //요청 전송
                 xhr.send();
 
+                let loading = `<div class="text-center loading">
+                                    <div class="spinner-border text-warning" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>`;
+                document
+                    .querySelector(".content")
+                    .insertAdjacentHTML("beforeend", loading);
+
+                //스크롤 아래로 이동
+                document.querySelector(".content").scrollTop =
+                    document.querySelector(".content").scrollHeight;
+
                 //Callback
+                /**
+                 * 한국어->영어 번역
+                 */
                 xhr.onload = () => {
                     if (xhr.status == 200) {
                         //success
-                        console.log(xhr.response);
-                        result = xhr.response;
+                        console.log(
+                            `1 번역==>${
+                                JSON.parse(xhr.response).message.result
+                                    .translatedText
+                            }`
+                        );
+
+                        allChatEn =
+                            allChatEn +
+                            "\n\n" +
+                            JSON.parse(xhr.response).message.result
+                                .translatedText;
+
+                        console.log(`누적대화==>${allChatEn}`);
+
+                        const configuration = new Configuration({
+                            apiKey: "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",
+                        });
+                        const openai = new OpenAIApi(configuration);
+
+                        /**
+                         * 질문 답변 요청
+                         */
+                        openai
+                            .createCompletion({
+                                model: "text-davinci-003",
+                                prompt: allChatEn,
+                                temperature: 0.7,
+                                max_tokens: 256,
+                                top_p: 1,
+                                frequency_penalty: 0,
+                                presence_penalty: 0,
+                            })
+                            .then((result) => {
+                                //XMLHttpRequest 객체 생성
+                                var xhr2 = new XMLHttpRequest();
+                                let msg2 = result.data.choices[0].text;
+                                allChatEn = allChatEn + "\n\n" + msg2;
+
+                                console.log(`2 답변==>${msg2}`);
+
+                                let url2 = `${serverIP}/translate?msg=${msg2}&source=en&target=ko`;
+
+                                //요청을 보낼 방식, url, 비동기여부 설정
+                                xhr2.open("GET", url2, true);
+
+                                //요청 전송
+                                xhr2.send();
+
+                                //Callback
+                                /**
+                                 * 영어->한국어 번역
+                                 */
+                                xhr2.onload = () => {
+                                    if (xhr2.status == 200) {
+                                        //success
+                                        //console.log(xhr.response);
+
+                                        let answerTran = JSON.parse(
+                                            xhr2.response
+                                        ).message.result.translatedText;
+
+                                        console.log(
+                                            `3 답변번역==>${answerTran}`
+                                        );
+
+                                        //console.log(answerTran);
+                                        let template2 = `<div class="chat">
+                                                            <span class="chat-message">${answerTran}</span>
+                                                        </div>`;
+                                        document
+                                            .querySelector(".content")
+                                            .insertAdjacentHTML(
+                                                "beforeend",
+                                                template2
+                                            );
+
+                                        //스크롤 아래로 이동
+                                        document.querySelector(
+                                            ".content"
+                                        ).scrollTop =
+                                            document.querySelector(
+                                                ".content"
+                                            ).scrollHeight;
+
+                                        //로딩바 삭제
+                                        document
+                                            .querySelector(".loading")
+                                            .remove();
+                                    } else {
+                                        //failed
+                                    }
+                                };
+                            });
                     } else {
                         //failed
                     }
                 };
-
-                return result;
             };
         </script>
     </body>
